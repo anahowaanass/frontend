@@ -5,7 +5,7 @@ const nextConfig = {
   // output: 'export',
   reactStrictMode: true,
   images: {
-    domains: ['127.0.0.1', 'localhost', 'frontend-seven-iota-51.vercel.app'],
+    domains: ['127.0.0.1', 'localhost', 'events-ebon-psi.vercel.app'],
     remotePatterns: [
       {
         hostname: '**.cyber-scale.me',
