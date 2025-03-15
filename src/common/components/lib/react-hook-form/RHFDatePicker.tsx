@@ -5,7 +5,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { FormControl, FormHelperText } from '@mui/material';
 import 'dayjs/locale/fr';
 import { Dayjs } from 'dayjs';
-import { frFR } from '@mui/x-date-pickers';
+import { frFR } from '@mui/x-date-pickers/locales';
 
 type Props = DatePickerProps<Dayjs> & {
   name: string;

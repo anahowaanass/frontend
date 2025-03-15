@@ -45,11 +45,12 @@ interface AuthData {
     _input: ResetPasswordInput,
     _options?: FetchApiOptions
   ) => Promise<ApiResponse<{ token: string }>>;
-  initialized: boolean; // This is used to prevent the app from rendering before the useAuth initial fetch is complete
+  initialized: boolean;
 }
 
 const useAuth = (): AuthData => {
   const authEnabled = process.env.NEXT_PUBLIC_AUTH_ENABLED === 'true';
+
   if (!authEnabled) {
     return {
       initialized: true,
@@ -62,28 +63,26 @@ const useAuth = (): AuthData => {
     };
   }
 
-  const [initialized, setInitialized] = useState<boolean>(false);
-
+  const [initialized, setInitialized] = useState(false);
   const fetchApi = useApi();
 
-  const { data: user, mutate } = useSWR<User | null>(ApiRoutes.Auth.Me, async (url) => {
+  const { data: user, mutate } = useSWR<User | null>(ApiRoutes.Auth.Me, async (url: string) => {
     if (!localStorage.getItem('authToken')) {
       setInitialized(true);
       return null;
     }
-    const options: ApiOptions = {
-      method: 'POST',
-    };
+
+    const options: ApiOptions = { method: 'POST' };
     const response = await fetchApi<{ user: User }>(url, options);
-    const { success, data } = response;
-    let returnedUser = null;
-    if (!success) {
+
+    if (!response.success) {
       localStorage.removeItem('authToken');
-    } else {
-      returnedUser = data?.user ?? null;
+      setInitialized(true);
+      return null;
     }
+
     setInitialized(true);
-    return returnedUser;
+    return response.data?.user ?? null;
   });
 
   const login = async (input: LoginInput, options?: FetchApiOptions) => {
@@ -116,8 +115,10 @@ const useAuth = (): AuthData => {
 
   const logout = async (options?: FetchApiOptions) => {
     const response = await fetchApi<null>(ApiRoutes.Auth.Logout, { method: 'POST', ...options });
+
     localStorage.removeItem('authToken');
     mutate();
+
     return response;
   };
 
@@ -125,19 +126,14 @@ const useAuth = (): AuthData => {
     input: RequestPasswordResetInput,
     options?: FetchApiOptions
   ) => {
-    const response = await fetchApi<null>(ApiRoutes.Auth.RequestPasswordReset, {
-      data: input,
-      ...options,
-    });
-    return response;
+    return fetchApi<null>(ApiRoutes.Auth.RequestPasswordReset, { data: input, ...options });
   };
 
   const resetPassword = async (input: ResetPasswordInput, options?: FetchApiOptions) => {
-    const response = await fetchApi<{ token: string }>(ApiRoutes.Auth.ResetPassword, {
+    return fetchApi<{ token: string }>(ApiRoutes.Auth.ResetPassword, {
       data: input,
       ...options,
     });
-    return response;
   };
 
   return {
